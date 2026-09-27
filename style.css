@@ -1,0 +1,132 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0f1115;
+  color: #e6e8eb;
+}
+
+.mono { font-family: 'Consolas', monospace; }
+
+.topbar {
+  padding: 14px 24px;
+  background: #15181f;
+  border-bottom: 1px solid #262a33;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.brand { font-weight: 700; font-size: 18px; }
+.brand span { color: #6b7280; }
+.topbar-sub { color: #9ca3af; font-size: 13px; }
+
+.case-shell { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+.case-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #1e2230;
+  color: #a5b4fc;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.case-header h1 { margin: 6px 0 10px; font-size: 26px; }
+.case-header p { color: #c3c7ce; line-height: 1.5; }
+.case-header code {
+  background: #1e2230; padding: 1px 6px; border-radius: 3px; font-size: 90%;
+}
+
+.sensor-inputs {
+  display: flex;
+  gap: 24px;
+  margin: 18px 0;
+}
+.sensor-toggle { display: flex; align-items: center; gap: 10px; }
+.value-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mode-tabs { display: flex; gap: 10px; margin: 10px 0 18px; }
+.mode-tab {
+  background: #181b22;
+  border: 1px solid #2a2f3a;
+  color: #cfd3da;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mode-tab .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #4b5563;
+}
+.mode-tab.classic .dot { background: #34d399; }
+.mode-tab.quantum .dot { background: #a78bfa; }
+.mode-tab.current { border-color: #4b5563; background: #1e2230; }
+
+/* Selector de par activo (S1-S2 / S3-S4) */
+.par-tabs { display: flex; gap: 10px; margin: 14px 0 6px; }
+.par-tab {
+  background: #181b22;
+  border: 1px solid #2a2f3a;
+  color: #cfd3da;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.par-tab:hover { border-color: #4b5563; }
+.par-tab.current { border-color: #a5b4fc; background: #1e2230; color: #a5b4fc; }
+
+.circuit-layout {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+#circuit-canvas {
+  background: #0b0d12;
+  border: 1px solid #262a33;
+  border-radius: 8px;
+  flex: 1 1 640px;
+  max-width: 640px;
+}
+
+.circuit-side { flex: 1 1 260px; }
+
+/* Esta es la regla clave que faltaba: oculta el panel que no está activo */
+.mode-panel { display: none; }
+.mode-panel.active { display: block; }
+
+.stat-block {
+  background: #15181f;
+  border: 1px solid #262a33;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+.stat-label { font-size: 12px; color: #9ca3af; }
+.stat-value { font-size: 18px; font-weight: 700; margin-top: 2px; }
+.classic-text { color: #34d399; }
+.quantum-text { color: #a78bfa; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.ctrl-btn {
+  background: #1e2230;
+  border: 1px solid #2a2f3a;
+  color: #e6e8eb;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.ctrl-btn:hover { border-color: #4b5563; }
+.ctrl-btn.quantum { border-color: #6d28d9; }
+
+.result-msg { font-weight: 700; min-height: 22px; }
