@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bit vs Qubit — Sensores y el algoritmo de Deutsch</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">bit <span>//</span> qubit</div>
+  <div class="topbar-sub mono">Caso · Comparación de sensores binarios</div>
+</div>
+
+<section class="case-shell">
+
+  <div class="case-header">
+    <div class="case-tag mono">DEUTSCH · 4 sensores, 2 pares independientes</div>
+    <h1>¿Los sensores coinciden, por pares?</h1>
+    <p>
+      Cuatro sensores binarios (S1, S2, S3, S4), evaluados en dos pares
+      independientes: S1–S2 y S3–S4. Cada sensor solo puede reportar 0
+      (normal) o 1 (alterado). De forma clásica, cada par se compara
+      directamente (<code>sensor_x == sensor_y</code>). De forma cuántica,
+      cada par se codifica como una función f dentro de un oráculo, y el
+      mismo circuito de Deutsch —sin modificar— determina si esa función es
+      constante (coinciden) o balanceada (difieren) con
+      <strong>una sola consulta</strong>.
+    </p>
+  </div>
+
+  <!-- Selector de par activo -->
+  <div class="par-tabs mono">
+    <button class="par-tab current" data-par="p1">Par S1 – S2</button>
+    <button class="par-tab" data-par="p2">Par S3 – S4</button>
+  </div>
+
+  <!-- Entradas compartidas por ambos modos, para el par activo -->
+  <div class="sensor-inputs">
+    <div class="sensor-toggle">
+      <span id="label-a" class="stat-label">Sensor S1</span>
+      <button id="toggle-a" class="ctrl-btn value-btn">0</button>
+    </div>
+    <div class="sensor-toggle">
+      <span id="label-b" class="stat-label">Sensor S2</span>
+      <button id="toggle-b" class="ctrl-btn value-btn">1</button>
+    </div>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab classic current" data-mode="classic">
+      <span class="dot"></span> Modo clásico
+    </button>
+    <button class="mode-tab quantum" data-mode="quantum">
+      <span class="dot"></span> Modo cuántico
+    </button>
+  </div>
+
+  <div class="circuit-layout">
+    <!-- Canvas único, compartido por ambos modos y ambos pares -->
+    <canvas id="circuit-canvas" width="640" height="380"></canvas>
+
+    <div class="circuit-side">
+
+      <!-- ===== MODO CLÁSICO ===== -->
+      <div id="mode-classic" class="mode-panel active">
+        <div class="stat-block">
+          <div class="stat-label">Par activo</div>
+          <div id="c-stat-par" class="stat-value mono">S1 – S2</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Valores del par</div>
+          <div id="c-stat-values" class="stat-value mono">0 / 1</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Consultas necesarias</div>
+          <div class="stat-value mono classic-text">2 (leer ambos sensores del par)</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Resultado</div>
+          <div id="c-stat-result" class="stat-value mono classic-text">—</div>
+        </div>
+        <div class="controls">
+          <button id="c-btn-start" class="ctrl-btn">▶ Comparar</button>
+          <button id="c-btn-step" class="ctrl-btn">Paso a paso</button>
+          <button id="c-btn-reset" class="ctrl-btn">Reiniciar</button>
+        </div>
+        <p id="classic-result" class="result-msg classic-text"></p>
+      </div>
+
+      <!-- ===== MODO CUÁNTICO ===== -->
+      <div id="mode-quantum" class="mode-panel">
+        <div class="stat-block">
+          <div class="stat-label">Par activo</div>
+          <div id="q-stat-par" class="stat-value mono">S1 – S2</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Consultas al oráculo</div>
+          <div class="stat-value mono quantum-text">1</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Estado del circuito</div>
+          <div id="q-stat-state" class="stat-value mono">|0⟩|1⟩ (inicial)</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Clasificación de f</div>
+          <div id="q-stat-class" class="stat-value mono quantum-text">—</div>
+        </div>
+        <div class="controls">
+          <button id="q-btn-start" class="ctrl-btn quantum">▶ Ejecutar circuito</button>
+          <button id="q-btn-step" class="ctrl-btn">Paso a paso</button>
+          <button id="q-btn-measure" class="ctrl-btn quantum">◎ Medir</button>
+          <button id="q-btn-reset" class="ctrl-btn">Reiniciar</button>
+        </div>
+        <p id="quantum-result" class="result-msg quantum-text"></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('current'));
+    tab.classList.add('current');
+    const mode = tab.dataset.mode;
+    document.getElementById('mode-classic').classList.toggle('active', mode === 'classic');
+    document.getElementById('mode-quantum').classList.toggle('active', mode === 'quantum');
+    if (typeof onModeChange === 'function') onModeChange(mode);
+  });
+});
+</script>
+<script src="sensor-deutsch.js"></script>
+</body>
+</html>
