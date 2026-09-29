@@ -24,8 +24,39 @@ function getOracle(A, B) {
   return { tipo: 'Balanceada', gate: 'CNOT(q0→q1) + X en q1' }; // A=1,B=0
 }
 
+// ===== SIMULADOR REAL DE 2 QUBITS (vector de estado, 4 amplitudes) =====
+// indice = 2*q1 + q0. Estado inicial |q1=1, q0=0>. Todas las amplitudes son reales.
+function applyH(st, k) {
+  const r = Math.SQRT1_2, out = [0, 0, 0, 0];
+  for (let i = 0; i < 4; i++) {
+    const bit = (i >> k) & 1, j = i ^ (1 << k);
+    out[i] += bit === 0 ? r * st[i] + r * st[j] : r * st[j] - r * st[i];
+  }
+  return out;
+}
+function applyX(st, k) {
+  const out = [0, 0, 0, 0];
+  for (let i = 0; i < 4; i++) out[i ^ (1 << k)] = st[i];
+  return out;
+}
+function applyCNOT(st, c, t) {
+  const out = [0, 0, 0, 0];
+  for (let i = 0; i < 4; i++) out[((i >> c) & 1) ? i ^ (1 << t) : i] = st[i];
+  return out;
+}
+// Corre el circuito completo de Deutsch y devuelve P(c0 = 1)
+function simulateDeutsch(A, B) {
+  let st = [0, 0, 1, 0];          // |q1=1, q0=0>
+  st = applyH(st, 0);
+  st = applyH(st, 1);
+  if (A !== B) st = applyCNOT(st, 0, 1);
+  if (A === 1) st = applyX(st, 1);
+  st = applyH(st, 0);
+  return st.reduce((p, a, i) => p + ((i & 1) ? a * a : 0), 0);
+}
 function expectedMeasurement(A, B) {
-  return A === B ? 0 : 1; // 0 = constante, 1 = balanceada
+  // Ya no es teorico: sale de la simulacion del circuito.
+  return simulateDeutsch(A, B) > 0.5 ? 1 : 0; // 0 = constante, 1 = balanceada
 }
 
 // ===== HELPERS DE DIBUJO (sin cambios) =====
@@ -128,13 +159,13 @@ function drawQuantum() {
   if (quantumStep >= 1) {
     box(150, q0y - 20, 40, 40, 'H', '#a78bfa');
     box(150, q1y - 20, 40, 40, 'H', '#a78bfa');
-    text(200, 40, 'Estado: superposición', '#a78bfa', 13, 'left');
+    text(60, 300, 'Estado: superposición', '#a78bfa', 13, 'left');
   }
 
   if (quantumStep >= 2) {
     ctx.setLineDash([5, 4]);
     ctx.strokeStyle = '#f59e0b';
-    ctx.strokeRect(280, q0y - 60, 90, (q1y - q0y) + 100);
+    ctx.strokeRect(270, q0y - 60, 120, (q1y - q0y) + 100);
     ctx.setLineDash([]);
     text(325, q0y - 70, 'Uf', '#f59e0b', 13, 'center');
 
@@ -156,22 +187,24 @@ function drawQuantum() {
       ctx.stroke();
     }
     if (oracle.gate.includes('X en q1')) {
-      box(350, q1y - 20, 30, 40, 'X', '#f59e0b');
+      const xPos = oracle.gate.includes('CNOT') ? 350 : 310;
+      box(xPos, q1y - 20, 30, 40, 'X', '#f59e0b');
     }
-    text(200, 60, `Oráculo aplicado: ${oracle.gate}`, '#f59e0b', 12, 'left');
+    text(60, 320, `Oráculo aplicado: ${oracle.gate}`, '#f59e0b', 12, 'left');
   }
 
   if (quantumStep >= 3) {
     box(430, q0y - 20, 40, 40, 'H', '#a78bfa');
-    text(200, 80, 'Interferencia sobre q0', '#a78bfa', 13, 'left');
+    text(60, 340, 'Interferencia sobre q0', '#a78bfa', 13, 'left');
   }
 
   if (quantumStep >= 4) {
     const resultado = expectedMeasurement(A, B);
     const color = resultado === 0 ? '#34d399' : '#f87171';
     box(500, q0y - 20, 50, 40, 'M', color);
-    text(560, q0y + 5, `c0 = ${resultado}`, color, 16, 'left');
-    text(200, 100,
+    text(560, q0y - 30, `c0 = ${resultado}`, color, 16, 'left');
+    text(560, q0y - 12, `P(1) = ${(simulateDeutsch(A, B) * 100).toFixed(0)}%`, color, 12, 'left');
+    text(60, 360,
       resultado === 0 ? 'Colapso → función CONSTANTE' : 'Colapso → función BALANCEADA',
       color, 13, 'left');
   }
@@ -266,7 +299,7 @@ document.getElementById('c-btn-reset').addEventListener('click', () => {
 
 // Cuántico
 document.getElementById('q-btn-start').addEventListener('click', () => {
-  quantumStep = 3; drawQuantum(); updateQuantumStats();
+  quantumStep = 4; drawQuantum(); updateQuantumStats();
 });
 document.getElementById('q-btn-step').addEventListener('click', () => {
   quantumStep = Math.min(quantumStep + 1, 3);

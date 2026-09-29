@@ -4,7 +4,7 @@
 
 Este repositorio contiene la implementación clásica correspondiente al proyecto de la materia **Fundamentos de Computación Cuántica**, cuyo propósito general es analizar un problema computacional sencillo desde dos enfoques distintos: una solución clásica y una solución cuántica basada en el algoritmo de Deutsch.
 
-El problema seleccionado consiste en comparar las lecturas de dos sensores binarios, identificados como sensor A y sensor B. Cada sensor puede presentar únicamente dos estados posibles: 0 (estado normal) o 1 (estado alterado). El sistema debe determinar si ambos sensores se encuentran en el mismo estado o si existe una diferencia entre sus lecturas.
+El problema seleccionado consiste en comparar las lecturas de sensores binarios. Se usan cuatro sensores (S1, S2, S3 y S4) evaluados en dos pares independientes: S1-S2 y S3-S4. Cada sensor puede presentar únicamente dos estados posibles: 0 (estado normal) o 1 (estado alterado). El sistema debe determinar si ambos sensores se encuentran en el mismo estado o si existe una diferencia entre sus lecturas.
 
 Este repositorio corresponde específicamente a la solución clásica del problema, implementada como una aplicación de escritorio con interfaz gráfica que simula el comportamiento de un sistema de monitoreo industrial. La contraparte cuántica del proyecto, basada en el algoritmo de Deutsch, se documenta por separado en el reporte formal de la materia.
 
@@ -60,7 +60,7 @@ pip install matplotlib
 ### 3. Ejecutar el programa
 
 ```bash
-python3 monitor_industrial.py
+python3 clasico.py
 ```
 
 ## Estructura del sistema

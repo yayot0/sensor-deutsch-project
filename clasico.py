@@ -18,7 +18,7 @@ class SistemaMonitoreo:
         self.root = root
 
         self.root.title("Monitor Industrial | Sistema de Sensores")
-        self.root.geometry("850x600")
+        self.root.geometry("900x620")
         self.root.resizable(True, True)
         self.root.minsize(700, 500)
 
@@ -30,8 +30,9 @@ class SistemaMonitoreo:
         # Esto es lo que alimenta al boxplot: representan una lectura
         # simulada tipo "voltaje" antes de aplicar el umbral que la
         # convierte en 0 (normal) o 1 (alterado).
-        self.historial_a = []
-        self.historial_b = []
+        # Ahora son 4 sensores agrupados en 2 pares: S1-S2 y S3-S4.
+        self.historial = [[], [], [], []]
+        self.estados = []
 
         self.ventana_graficas = None
         self.ax_barras = None
@@ -68,8 +69,9 @@ class SistemaMonitoreo:
         )
         panel_sensores.pack(fill="x")
 
-        self.crear_sensor(panel_sensores, "SENSOR A", 0)
-        self.crear_sensor(panel_sensores, "SENSOR B", 1)
+        for i in range(4):
+            self.crear_sensor(panel_sensores, f"SENSOR S{i + 1}", i)
+            panel_sensores.columnconfigure(i, weight=1)
 
         panel_botones = tk.Frame(contenido)
         panel_botones.pack(pady=15)
@@ -113,7 +115,7 @@ class SistemaMonitoreo:
         )
         panel_historial.pack(fill="both", expand=True)
 
-        columnas = ("Lectura", "Hora", "Sensor A", "Sensor B", "Resultado")
+        columnas = ("Lectura", "Hora", "Par", "Valores", "Resultado")
 
         self.tabla = ttk.Treeview(
             panel_historial, columns=columnas, show="headings"
@@ -124,9 +126,9 @@ class SistemaMonitoreo:
 
         self.tabla.column("Lectura", width=70, anchor="center")
         self.tabla.column("Hora", width=90, anchor="center")
-        self.tabla.column("Sensor A", width=120, anchor="center")
-        self.tabla.column("Sensor B", width=120, anchor="center")
-        self.tabla.column("Resultado", width=220, anchor="center")
+        self.tabla.column("Par", width=100, anchor="center")
+        self.tabla.column("Valores", width=100, anchor="center")
+        self.tabla.column("Resultado", width=240, anchor="center")
 
         self.tabla.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -137,19 +139,16 @@ class SistemaMonitoreo:
     def crear_sensor(self, padre, nombre, columna):
 
         marco = tk.Frame(padre)
-        marco.grid(row=0, column=columna, padx=60, pady=5)
+        marco.grid(row=0, column=columna, padx=25, pady=5)
 
         tk.Label(marco, text=nombre, font=("Arial", 11, "bold")).pack()
 
         estado = tk.Label(
-            marco, text="NORMAL", font=("Arial", 18, "bold"), width=12
+            marco, text="NORMAL", font=("Arial", 14, "bold"), width=10
         )
         estado.pack(pady=5)
 
-        if nombre == "SENSOR A":
-            self.estado_a = estado
-        else:
-            self.estado_b = estado
+        self.estados.append(estado)
 
 
     def crear_indicador(self, padre, titulo, columna):
@@ -185,48 +184,55 @@ class SistemaMonitoreo:
 
     def nueva_lectura(self):
 
-        # Estado "real" que determina hacia dónde tiende el sensor A
-        estado_a = random.randint(0, 1)
+        # Cada lectura evalúa los dos pares de forma independiente:
+        # par 0 = S1-S2 y par 1 = S3-S4
+        for par in range(2):
 
-        # 15% de probabilidad de que el sensor B tienda hacia el
-        # estado contrario (simula una inconsistencia real)
-        if random.random() < 0.15:
-            estado_b = 1 - estado_a
-        else:
-            estado_b = estado_a
+            # Estado "real" que determina hacia dónde tiende el primer sensor
+            estado_a = random.randint(0, 1)
 
-        # Lecturas crudas continuas (para el boxplot)
-        crudo_a = self.generar_lectura_cruda(estado_a)
-        crudo_b = self.generar_lectura_cruda(estado_b)
+            # 15% de probabilidad de que el segundo sensor tienda hacia el
+            # estado contrario (simula una inconsistencia real)
+            if random.random() < 0.15:
+                estado_b = 1 - estado_a
+            else:
+                estado_b = estado_a
 
-        # Umbral de decisión: por debajo de 0.5 es NORMAL (0),
-        # por encima es ALTERADO (1). Aquí es donde el problema
-        # binario original (el que se compara con Deutsch en la
-        # parte cuántica) sigue intacto.
-        sensor_a = 0 if crudo_a < 0.5 else 1
-        sensor_b = 0 if crudo_b < 0.5 else 1
+            # Lecturas crudas continuas (para el boxplot)
+            crudo_a = self.generar_lectura_cruda(estado_a)
+            crudo_b = self.generar_lectura_cruda(estado_b)
 
-        self.procesar_lectura(sensor_a, sensor_b, crudo_a, crudo_b)
+            # Umbral de decisión: por debajo de 0.5 es NORMAL (0),
+            # por encima es ALTERADO (1). Aquí es donde el problema
+            # binario original (el que se compara con Deutsch en la
+            # parte cuántica) sigue intacto.
+            sensor_a = 0 if crudo_a < 0.5 else 1
+            sensor_b = 0 if crudo_b < 0.5 else 1
+
+            self.procesar_lectura(par, sensor_a, sensor_b, crudo_a, crudo_b)
 
 
     def simular(self):
-        for _ in range(20):
+        for _ in range(10):
             self.nueva_lectura()
 
 
     # PROCESAR LECTURA (comparación clásica sobre valores binarios)
 
-    def procesar_lectura(self, sensor_a, sensor_b, crudo_a, crudo_b):
+    def procesar_lectura(self, par, sensor_a, sensor_b, crudo_a, crudo_b):
 
         self.lecturas += 1
 
+        i = par * 2   # índice del primer sensor del par (0 o 2)
+        nombre_par = f"S{i + 1} - S{i + 2}"
+
         # Guardamos el valor crudo (continuo), no el binario, para
         # que el boxplot tenga dispersión real
-        self.historial_a.append(crudo_a)
-        self.historial_b.append(crudo_b)
+        self.historial[i].append(crudo_a)
+        self.historial[i + 1].append(crudo_b)
 
-        self.actualizar_sensor(self.estado_a, sensor_a)
-        self.actualizar_sensor(self.estado_b, sensor_b)
+        self.actualizar_sensor(self.estados[i], sensor_a)
+        self.actualizar_sensor(self.estados[i + 1], sensor_b)
 
         hora = datetime.now().strftime("%H:%M:%S")
 
@@ -244,7 +250,7 @@ class SistemaMonitoreo:
 
         self.tabla.insert(
             "", "end",
-            values=(self.lecturas, hora, sensor_a, sensor_b, resultado),
+            values=(self.lecturas, hora, nombre_par, f"{sensor_a} / {sensor_b}", resultado),
             tags=(etiqueta,)
         )
 
@@ -327,11 +333,10 @@ class SistemaMonitoreo:
         # Gráfica 2: boxplot (lecturas crudas, continuas)
         self.ax_boxplot.clear()
 
-        if self.historial_a and self.historial_b:
-            self.ax_boxplot.boxplot(
-                [self.historial_a, self.historial_b],
-                tick_labels=["Sensor A", "Sensor B"]
-            )
+        if self.historial[0]:
+            self.ax_boxplot.boxplot(self.historial)
+            self.ax_boxplot.set_xticks([1, 2, 3, 4])
+            self.ax_boxplot.set_xticklabels(["S1", "S2", "S3", "S4"])
         else:
             self.ax_boxplot.text(
                 0.5, 0.5, "Sin datos todavía",
@@ -351,14 +356,13 @@ class SistemaMonitoreo:
         self.lecturas = 0
         self.consistentes = 0
         self.alertas = 0
-        self.historial_a = []
-        self.historial_b = []
+        self.historial = [[], [], [], []]
 
         for elemento in self.tabla.get_children():
             self.tabla.delete(elemento)
 
-        self.estado_a.config(text="NORMAL")
-        self.estado_b.config(text="NORMAL")
+        for etiqueta in self.estados:
+            etiqueta.config(text="NORMAL")
         self.resultado.config(text="SISTEMA LISTO")
 
         self.actualizar_indicadores()
